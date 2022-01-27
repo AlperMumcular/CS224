@@ -1,0 +1,74 @@
+	.text
+__start:
+	# wants the size from the user
+	li $v0, 4
+	la $a0, message
+	syscall
+	
+	li $v0, 5
+	syscall
+	sw $v0, size 
+	lw $t0, size # $t0 --> size
+	
+	beq $t0, 0, zero # if size is 0 go to zero function
+		
+	addi $t1, $0, 0 # $t1 #of inputs entered
+	# prints the elemeents message
+	li $v0, 4
+	la $a0, itemMessage
+	syscall
+	
+	
+	la $t2, array #  $t2 beginning of the array
+	la $t3, array # $t3 end of the array
+	blt $t1, $t0, getInput
+	# gets inputs from the user
+	getInput:
+		li $v0, 5
+		syscall
+		sw $v0, 0($t3)
+		addi $t3, $t3, 4
+		addi $t1, $t1, 1
+		blt $t1, $t0, getInput
+	subi $t3, $t3, 4 # in method $t3 will be address of the last element + 4 we need to decrement it
+	li $t6, 1
+	blt $t2, $t3, check
+	check: # checks whether the given array is palindrome or not
+		lw $t4, 0($t2)
+		lw $t5, 0($t3)
+		addi $t2, $t2, 4
+		subi $t3, $t3, 4
+		bne $t4, $t5, false # if it is not palindrome go to false function
+		blt $t2, $t3, check # continue checking
+# prints the result 		
+result:
+	move $s0, $t6 # palindrome or not stored in $s0
+	
+	li $v0, 4
+	la $a0, palindromeMessage
+	syscall
+	# test ispalindrome function
+	move $a0, $s0
+	li $v0, 1
+	syscall
+	
+	li $v0, 10
+	syscall
+
+# if it is not palindrome change the result to 0
+false:
+	li $t6, 0 
+	j result
+# 0 size array 
+zero:
+	li $t6, 1
+	j result
+	
+	
+	
+	.data
+message: .asciiz "Please enter size:"
+itemMessage: .asciiz "Enter element:\n"
+size: .word 0
+array: .space 20
+palindromeMessage: .asciiz "1 = is palindrome \n0 = is not palindrome \n"

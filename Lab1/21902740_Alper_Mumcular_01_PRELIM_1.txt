@@ -1,0 +1,251 @@
+	.text
+__start:
+	# getting size of the array
+	li $v0, 4
+	la $a0, sizeMessage
+	syscall
+	
+	li $v0, 5 
+	syscall
+	sw $v0, size
+	
+	# getting elements
+	lw $t0, size # t0 --> size
+	la $t1, array # t1 --> first index
+	add $t2, $0, $0
+	
+	li $v0, 4
+	la $a0, arrayMessage
+	syscall
+	
+	elements:
+		li $v0, 5
+		syscall
+		sw $v0, 0($t1)
+		addi $t2, $t2, 1 # t2 --> current size
+		addi $t1, $t1, 4
+		blt $t2, $t0, elements
+	
+	# display
+	la $t1, array
+	add $t2, $0, $0
+	
+	li $v0, 4
+	la $a0, display
+	syscall
+	
+	disp:
+		lw $a0, 0($t1)
+		addi $t1, $t1, 4
+		li $v0, 1
+		syscall
+		addi $t2, $t2, 1 # t2 ---> no of displayed items
+		bgt $t0, $t2, spacing
+		spacing: 
+			la $a0, space
+			li $v0, 4
+			syscall
+		blt $t2, $t0, disp
+		subi $t1, $t1, 4
+	
+	# reverse
+	la $t0, array
+	swap:
+		lw $t3, 0($t1)
+		lw $t4, 0($t0)
+		sw $t3, 0($t0)
+		sw $t4, 0($t1)
+		addi $t0, $t0, 4
+		subi $t1, $t1, 4
+		bgt $t1, $t0, swap
+	
+	# reverse display
+	la $t1, array
+	lw $t0, size # t0 --> size
+	add $t2, $0, $0
+	
+	li $v0, 4
+	la $a0, reverseMessage
+	syscall
+	
+	reverseDisp:
+		lw $a0, 0($t1)
+		addi $t1, $t1, 4
+		li $v0, 1
+		syscall
+		addi $t2, $t2, 1 # t2 ---> no of displayed items
+		bgt $t0, $t2, reverseSpacing
+		reverseSpacing: 
+			la $a0, space
+			li $v0, 4
+			syscall
+		blt $t2, $t0, reverseDisp
+		subi $t1, $t1, 4
+	
+	li $v0, 10
+	syscall
+	
+	.data
+size: .word 0
+array: .space 80
+sizeMessage: .asciiz "Enter the size of the array:\n"
+arrayMessage: .asciiz "Enter elements:\n"
+display: .asciiz "Elements: "
+reverseMessage: .asciiz "\nElements in reverse order: "
+space: .asciiz " "
+
+
+-----------------------------------------------------Part 2---------------------------------------------------------------------------
+	.text
+__start:
+	# wants the size from the user
+	li $v0, 4
+	la $a0, message
+	syscall
+	
+	li $v0, 5
+	syscall
+	sw $v0, size 
+	lw $t0, size # $t0 --> size
+	
+	beq $t0, 0, zero # if size is 0 go to zero function
+		
+	addi $t1, $0, 0 # $t1 #of inputs entered
+	# prints the elemeents message
+	li $v0, 4
+	la $a0, itemMessage
+	syscall
+	
+	
+	la $t2, array #  $t2 beginning of the array
+	la $t3, array # $t3 end of the array
+	blt $t1, $t0, getInput
+	# gets inputs from the user
+	getInput:
+		li $v0, 5
+		syscall
+		sw $v0, 0($t3)
+		addi $t3, $t3, 4
+		addi $t1, $t1, 1
+		blt $t1, $t0, getInput
+	subi $t3, $t3, 4 # in method $t3 will be address of the last element + 4 we need to decrement it
+	li $t6, 1
+	blt $t2, $t3, check
+	check: # checks whether the given array is palindrome or not
+		lw $t4, 0($t2)
+		lw $t5, 0($t3)
+		addi $t2, $t2, 4
+		subi $t3, $t3, 4
+		bne $t4, $t5, false # if it is not palindrome go to false function
+		blt $t2, $t3, check # continue checking
+# prints the result 		
+result:
+	move $s0, $t6 # palindrome or not stored in $s0
+	
+	li $v0, 4
+	la $a0, palindromeMessage
+	syscall
+	# test ispalindrome function
+	move $a0, $s0
+	li $v0, 1
+	syscall
+	
+	li $v0, 10
+	syscall
+
+# if it is not palindrome change the result to 0
+false:
+	li $t6, 0 
+	j result
+# 0 size array 
+zero:
+	li $t6, 1
+	j result
+	
+	
+	
+	.data
+message: .asciiz "Please enter size:"
+itemMessage: .asciiz "Enter element:\n"
+size: .word 0
+array: .space 20
+palindromeMessage: .asciiz "1 = is palindrome \n0 = is not palindrome \n"
+
+
+-------------------------------------------------------Part 3--------------------------------------------------------------------
+	.text
+__start:
+	# wants to a value from the user
+	li $v0, 4
+	la $a0, aMessage
+	syscall
+	
+	li $v0, 5
+	syscall
+	sw $v0, a
+	
+	# wants to b value from the user
+	li $v0, 4
+	la $a0, bMessage
+	syscall
+	
+	li $v0, 5
+	syscall
+	sw $v0, bb
+	
+	# wants to c value from the user
+	li $v0, 4
+	la $a0, cMessage
+	syscall
+	
+	li $v0, 5
+	syscall
+	sw $v0, c
+	
+	# regs
+	# $t0 --> value of a
+	# $t1 --> value of b
+	# $t2 --> value of c
+	lw $t0, a ###
+	lw $t1, bb
+	lw $t2, c
+	jal remainder # calculates remainder
+	
+	# prints x value
+	li $v0, 4
+	la $a0, xMessage
+	syscall
+	
+	li $v0, 1
+	lw $a0, x
+	syscall
+	
+	# end the program
+	li $v0, 10	
+	syscall
+
+# the method that calculates the remainder of x = ( a x ( b - c ) ) % 8
+remainder:
+	sub $t3, $t1, $2 # $t3 = ( b - c )
+	mul $t4, $t0, $t3 # $t4 = a* (b-c)
+	blt $t4, $0, negative
+	negative:
+		addi $t4, $t4, 8
+		blt $t4, $0, negative
+	bgt $t4, 8, decrement
+	decrement:
+		subi $t4, $t4, 8
+		bge $t4, 8, decrement
+	move $v0, $t4
+	sw $v0, x
+	jr $ra
+	
+	.data
+x: .word 0
+a: .word 0
+bb: .word 0
+c: .word 0
+aMessage: .asciiz "Enter a value: "
+bMessage: .asciiz "Enter b value: "
+cMessage: .asciiz "Enter c value: "
+xMessage: .asciiz "Value of x is: "
